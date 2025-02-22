@@ -1,20 +1,31 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import { Button } from "@/components/ui/button";
-import { 
-  BuildingIcon, 
-  BriefcaseIcon, 
-  WalletIcon, 
-  UsersIcon
-} from "lucide-react";
+import { useAuth } from '../contexts/AuthContext';
 
 const Homepage = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const handleGetStarted = () => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    } else {
+      navigate('/auth');
+    }
+  };
+
+  const handleLearnMore = () => {
+    // Implement  logic here
+    // For example, scroll to features section or navigate to about page
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <Header isForDashboard={false} />
       
       <main className="container mx-auto px-6 py-12">
-        {/* Hero Section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-12 mb-20">
           <div className="md:w-1/2">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
@@ -25,10 +36,17 @@ const Homepage = () => {
               with talented freelancers - all in one platform.
             </p>
             <div className="flex gap-4">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6">
-                Get Started
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6"
+                onClick={handleGetStarted}
+              >
+                {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
               </Button>
-              <Button variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50 px-8 py-6">
+              <Button 
+                variant="outline" 
+                className="text-blue-600 border-blue-600 hover:bg-blue-50 px-8 py-6"
+                onClick={handleLearnMore}
+              >
                 Learn More
               </Button>
             </div>
@@ -39,9 +57,6 @@ const Homepage = () => {
             </div>
           </div>
         </div>
-        
-        {/* Rest of the homepage content remains the same */}
-        {/* ... */}
       </main>
     </div>
   );
