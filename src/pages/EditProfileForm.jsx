@@ -1,3 +1,4 @@
+// EditProfileForm.jsx
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { UserIcon, Upload } from "lucide-react";
@@ -35,7 +36,9 @@ const EditProfileForm = ({ user, onSubmit, onCancel }) => {
       name: user?.name || "",
       location: user?.location || "",
       bio: user?.bio || "",
-      type: user?.type || "entrepreneur"
+      type: user?.type || "student",
+      skills: user?.skills || [],
+      experience: user?.experience || []
     }
   });
 
@@ -51,7 +54,6 @@ const EditProfileForm = ({ user, onSubmit, onCancel }) => {
   };
   
   const handleSubmit = (data) => {
-    // Combine form data with avatar if changed
     const updatedData = {
       ...data,
       avatar: avatarPreview || user?.avatar
@@ -135,7 +137,7 @@ const EditProfileForm = ({ user, onSubmit, onCancel }) => {
               )}
             />
             
-            {/* User Type/Badge */}
+            {/* User Type */}
             <FormField
               control={form.control}
               name="type"
@@ -176,7 +178,7 @@ const EditProfileForm = ({ user, onSubmit, onCancel }) => {
               )}
             />
             
-            {/* Bio/About Me */}
+            {/* Bio */}
             <FormField
               control={form.control}
               name="bio"
