@@ -26,7 +26,7 @@ function LandingPage() {
           whileHover="hover"
           whileTap="tap"
           className="px-8 py-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors text-lg font-semibold"
-          onClick={() => navigate('/job-assistant/analyze')}
+          onClick={() => navigate('analyze')}
         >
           Upload Your Resume
         </motion.button>
@@ -35,7 +35,7 @@ function LandingPage() {
           whileHover="hover"
           whileTap="tap"
           className="px-8 py-4 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 transition-colors text-lg font-semibold"
-          onClick={() => navigate('/job-assistant/create')}
+          onClick={() => navigate('create')}
         >
           Create from Scratch
         </motion.button>

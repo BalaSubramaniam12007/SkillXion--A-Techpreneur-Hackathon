@@ -6,7 +6,8 @@ import {
   WalletIcon, 
   UsersIcon,
   UserIcon,
-  LogOutIcon
+  LogOutIcon,
+  FileTextIcon
 } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -39,6 +40,10 @@ const Header = ({ isForDashboard = false }) => {
           <Link to="/freelancer-hub" className="flex flex-col items-center group cursor-pointer">
             <UsersIcon className="h-5 w-5 text-blue-600 group-hover:text-blue-700" fill="currentColor" strokeWidth={1.5} />
             <span className="text-xs mt-1 text-gray-700">FreeLancer Hub</span>
+          </Link>
+          <Link to="/resume-assistant" className="flex flex-col items-center group cursor-pointer">
+            <FileTextIcon className="h-5 w-5 text-blue-600 group-hover:text-blue-700" fill="currentColor" strokeWidth={1.5} />
+            <span className="text-xs mt-1 text-gray-700">Resume Assistant</span>
           </Link>
           <Link to="/profile" className="flex flex-col items-center group cursor-pointer">
             <UserIcon className="h-5 w-5 text-blue-600 group-hover:text-blue-700" />

@@ -11,8 +11,8 @@ function ResumeAssistant() {
         <Header isForDashboard={true} />
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/create" element={<CreateResumePage />} />
-        <Route path="/analyze" element={<AnalyzeResumePage />} />
+        <Route path="create" element={<CreateResumePage />} />  
+        <Route path="analyze" element={<AnalyzeResumePage />} />
       </Routes>
     </div>
   );
