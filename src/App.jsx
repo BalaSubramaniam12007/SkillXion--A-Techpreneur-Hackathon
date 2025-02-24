@@ -1,22 +1,22 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
-import Homepage from './pages/HomePage';
+import HomePage from './pages/HomePage';
 import Dashboard from './pages/DashBoard';
 import ProfilePage from './pages/ProfilePage';
 import Auth from './pages/Auth';
+import BrandAssistant from './components/features/BrandAssistant';
+import ProjectListings from './components/features/ProjectListings';
+import ResumeAssistant from './components/features/ResumeAssistant'; 
+import { supabase } from './lib/supabase'; 
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
-    <Route path="/auth/callback" element={<AuthCallback />} />
-  }
-  
-  return children;
+  return isAuthenticated ? children : <Navigate to="/auth" replace />;
 };
 
+// Auth Callback component
 const AuthCallback = () => {
   const { search } = useLocation();
   
@@ -26,16 +26,16 @@ const AuthCallback = () => {
       const token = params.get('token');
       const type = params.get('type');
       
-      if (type === 'email_confirmation') {
+      if (type === 'email_confirmation' && token) {
         try {
-          await supabase.auth.verifyOtp({
+          const { error } = await supabase.auth.verifyOtp({
             token_hash: token,
             type: 'email_confirmation'
           });
-          // Redirect to success page or login
-          navigate('/auth');
+          if (error) throw error;
+          window.location.href = '/auth';
         } catch (error) {
-          console.error('Error confirming email:', error);
+          console.error('Error confirming email:', error.message);
         }
       }
     };
@@ -51,8 +51,9 @@ function App() {
     <Router>
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<Homepage />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         
         {/* Protected routes */}
         <Route path="/dashboard" element={
@@ -67,12 +68,12 @@ function App() {
         } />
         <Route path="/brand-assistant" element={
           <ProtectedRoute>
-            <Dashboard />
+            <BrandAssistant />
           </ProtectedRoute>
         } />
-        <Route path="/job-assistant" element={
+        <Route path="/resume-assistant" element={
           <ProtectedRoute>
-            <Dashboard />
+            <ResumeAssistant />
           </ProtectedRoute>
         } />
         <Route path="/fund-finder" element={
@@ -82,7 +83,7 @@ function App() {
         } />
         <Route path="/freelancer-hub" element={
           <ProtectedRoute>
-            <Dashboard />
+            <ProjectListings />
           </ProtectedRoute>
         } />
       </Routes>
