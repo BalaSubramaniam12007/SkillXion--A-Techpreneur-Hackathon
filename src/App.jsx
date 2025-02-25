@@ -8,11 +8,10 @@ import ProfilePage from "./pages/ProfilePage";
 import Auth from "./pages/Auth";
 import BrandAssistant from "./components/features/BrandAI/BrandAssistant";
 import StartupListings from "./components/features/FunderAI/StartupListing";
-import ResumeAssistant from ".//components/features/FunderAI/StartupListing";
 import { supabase } from "./lib/supabase";
 import ProjectListings from "./components/features/FreelancerHub/ProjectListings";
 import JobListings from "./components/features/JobAI/JobListings";
-import ResumeAnalyzer from "./components/features/ResumeAI/ResumeAnalyzer";
+import ResumeAssistant from "./components/features/ResumeAI/ResumeAssistant";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
