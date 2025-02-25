@@ -81,8 +81,11 @@ const ProfilePage = () => {
         .select('*')
         .eq('id', userId)
         .single();
-
+  
       if (error) throw error;
+  
+      console.log('Fetched profile data:', data);
+  
       setProfile({
         ...data,
         name: data.name || "John Doe",
@@ -91,19 +94,19 @@ const ProfilePage = () => {
         location: data.location || "San Francisco, CA",
         avatar: data.avatar,
         socialLinks: {
-          github: "https://github.com/username",
-          linkedin: "https://linkedin.com/in/username",
-          website: "https://example.com"
+          github: data.github || "https://github.com/username",
+          linkedin: data.linkedin || "https://linkedin.com/in/username",
+          website: data.website || "https://example.com"
         },
-        experience: [
+        experience: data.experience || [
           { title: "Founder", company: "TechStartup", duration: "2022-Present" },
           { title: "Developer", company: "TechCorp", duration: "2020-2022" }
         ],
-        education: [
+        education: data.education || [
           { degree: "MBA", school: "Stanford", year: "2020-2022" },
           { degree: "BS Computer Science", school: "MIT", year: "2016-2020" }
         ],
-        skills: [
+        skills: data.skills || [
           { name: "JavaScript", proficiency: "Advanced" },
           { name: "Entrepreneurship", proficiency: "Advanced" },
           { name: "Project Management", proficiency: "Intermediate" }
@@ -117,7 +120,8 @@ const ProfilePage = () => {
   const handleProfileUpdate = async (updatedData) => {
     try {
       setLoading(true);
-      
+      console.log('Updating profile with data:', updatedData);
+  
       let avatarUrl = profile.avatar;
       if (updatedData.avatar && updatedData.avatar.startsWith('data:image')) {
         const avatarFile = await fetch(updatedData.avatar).then(res => res.blob());
@@ -127,8 +131,11 @@ const ProfilePage = () => {
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(fileName, avatarFile);
-
-        if (uploadError) throw uploadError;
+  
+        if (uploadError) {
+          console.error('Avatar upload error:', uploadError);
+          throw uploadError;
+        }
         
         const { data: { publicUrl } } = supabase.storage
           .from('avatars')
@@ -136,8 +143,8 @@ const ProfilePage = () => {
           
         avatarUrl = publicUrl;
       }
-
-      const { error } = await supabase
+  
+      const { data, error } = await supabase
         .from('profiles')
         .update({
           name: updatedData.name,
@@ -147,15 +154,20 @@ const ProfilePage = () => {
           avatar: avatarUrl,
           updated_at: new Date()
         })
-        .eq('id', user.id);
-
-      if (error) throw error;
+        .eq('id', user.id)
+        .select(); // Add .select() to get the updated data back
+  
+      if (error) {
+        console.error('Profile update error:', error);
+        throw error;
+      }
       
+      console.log('Update successful, received data:', data);
       await getProfile(user.id);
       setIsEditing(false);
     } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Error updating profile. Please try again.');
+      console.error('Error in handleProfileUpdate:', error);
+      alert(`Error updating profile: ${error.message}`);
     } finally {
       setLoading(false);
     }
