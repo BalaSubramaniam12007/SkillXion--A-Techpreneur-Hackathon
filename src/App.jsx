@@ -1,28 +1,24 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-  useLocation,
-} from "react-router-dom";
+// src/App.jsx
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "./contexts/AuthContext";
 import HomePage from "./pages/HomePage";
 import Dashboard from "./pages/DashBoard";
 import ProfilePage from "./pages/ProfilePage";
 import Auth from "./pages/Auth";
-import BrandAssistant from "./components/features/BrandAssistant";
-import ProjectListings from "./components/features/ProjectListings";
-import ResumeAssistant from "./components/features/ResumeAssistant";
+import BrandAssistant from "./components/features/BrandAI/BrandAssistant";
+import StartupListings from "./components/features/FunderAI/StartupListing";
+import ResumeAssistant from "./components/features/ResumeAI/ResumeAssistant";
 import { supabase } from "./lib/supabase";
-import FundFinder from "./components/features/fund-finder/pages/FunderFinder";
-// Protected Route wrapper component
+import ProjectListings from "./components/features/FreelancerHub/ProjectListings";
+import JobListings from "./components/features/JobAI/JobListings";
+import ResumeAnalyzer from "./components/features/ResumeAI/ResumeAnalyzer";
+
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to="/auth" replace />;
 };
 
-// Auth Callback component
 const AuthCallback = () => {
   const { search } = useLocation();
 
@@ -56,61 +52,38 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
-
-        {/* Protected routes */}
+        
         <Route
           path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
+          element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
         />
         <Route
           path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
+          element={<ProtectedRoute><ProfilePage /></ProtectedRoute>}
         />
         <Route
           path="/brand-assistant"
-          element={
-            <ProtectedRoute>
-              <BrandAssistant />
-            </ProtectedRoute>
-          }
+          element={<ProtectedRoute><BrandAssistant /></ProtectedRoute>}
         />
         <Route
           path="/resume-assistant/*"
-          element={
-            <ProtectedRoute>
-              <ResumeAssistant />
-            </ProtectedRoute>
-          }
+          element={<ProtectedRoute><ResumeAssistant /></ProtectedRoute>}
         />
-
         <Route
           path="/fund-finder"
-          element={
-            <ProtectedRoute>
-              <FundFinder />
-            </ProtectedRoute>
-          }
+          element={<ProtectedRoute><StartupListings /></ProtectedRoute>}
         />
         <Route
-          path="/freelancer-hub"
-          element={
-            <ProtectedRoute>
-              <ProjectListings />
-            </ProtectedRoute>
-          }
-        />       
+          path="freelancer-hub"
+          element={<ProtectedRoute><ProjectListings /></ProtectedRoute>}
+        />
+         <Route
+          path="/job-assistant"
+          element={<ProtectedRoute><JobListings /></ProtectedRoute>}
+        />
       </Routes>
     </Router>
   );

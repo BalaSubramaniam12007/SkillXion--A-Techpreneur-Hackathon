@@ -7,51 +7,86 @@ import {
   UsersIcon,
   UserIcon,
   LogOutIcon,
-  FileTextIcon
+  FileTextIcon,
+  MenuIcon,
 } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useState } from 'react';
 
 const Header = ({ isForDashboard = false }) => {
   const { isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
 
+  const navLinks = [
+    { to: "/brand-assistant", icon: BuildingIcon, label: "Brand Assistant" },
+    { to: "/job-assistant", icon: BriefcaseIcon, label: "Job Assistant" },
+    { to: "/fund-finder", icon: WalletIcon, label: "Fund Finder" },
+    { to: "/freelancer-hub", icon: UsersIcon, label: "Freelancer Hub" },
+    { to: "/resume-assistant", icon: FileTextIcon, label: "Resume Assistant" },
+    { to: "/profile", icon: UserIcon, label: "Profile" },
+  ];
+
   const renderNavLinks = () => (
-    <nav className="flex gap-8">
-      {isAuthenticated && (
-        <>
-          <Link to="/brand-assistant" className="flex flex-col items-center group cursor-pointer">
-            <BuildingIcon className="h-5 w-5 text-blue-600 group-hover:text-blue-700" fill="currentColor" strokeWidth={1.5} />
-            <span className="text-xs mt-1 text-gray-700">Brand Assistant</span>
-          </Link>
-          <Link to="/job-assistant" className="flex flex-col items-center group cursor-pointer">
-            <BriefcaseIcon className="h-5 w-5 text-blue-600 group-hover:text-blue-700" fill="currentColor" strokeWidth={1.5} />
-            <span className="text-xs mt-1 text-gray-700">Job Assistant</span>
-          </Link>
-          <Link to="/fund-finder" className="flex flex-col items-center group cursor-pointer">
-            <WalletIcon className="h-5 w-5 text-blue-600 group-hover:text-blue-700" fill="currentColor" strokeWidth={1.5} />
-            <span className="text-xs mt-1 text-gray-700">Fund Finder</span>
-          </Link>
-          <Link to="/freelancer-hub" className="flex flex-col items-center group cursor-pointer">
-            <UsersIcon className="h-5 w-5 text-blue-600 group-hover:text-blue-700" fill="currentColor" strokeWidth={1.5} />
-            <span className="text-xs mt-1 text-gray-700">FreeLancer Hub</span>
-          </Link>
-          <Link to="/resume-assistant" className="flex flex-col items-center group cursor-pointer">
-            <FileTextIcon className="h-5 w-5 text-blue-600 group-hover:text-blue-700" fill="currentColor" strokeWidth={1.5} />
-            <span className="text-xs mt-1 text-gray-700">Resume Assistant</span>
-          </Link>
-          <Link to="/profile" className="flex flex-col items-center group cursor-pointer">
-            <UserIcon className="h-5 w-5 text-blue-600 group-hover:text-blue-700" />
-            <span className="text-xs mt-1 text-gray-700">Profile</span>
-          </Link>
-        </>
-      )}
+    <nav className="hidden md:flex gap-6 lg:gap-8">
+      {isAuthenticated && navLinks.map(({ to, icon: Icon, label }, index) => (
+        <Link 
+          key={index} 
+          to={to} 
+          className="flex flex-col items-center group cursor-pointer transition-all duration-300 hover:scale-110"
+        >
+          <Icon className="h-5 w-5 text-blue-600 group-hover:text-blue-800 transition-colors duration-300" fill="currentColor" strokeWidth={1.5} />
+          <span className="text-xs mt-1 text-gray-700 group-hover:text-blue-800 font-medium">{label}</span>
+        </Link>
+      ))}
     </nav>
+  );
+
+  const renderMobileMenu = () => (
+    <div className={`md:hidden fixed inset-0 bg-blue-900 bg-opacity-95 z-50 transform ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 ease-in-out`}>
+      <div className="flex justify-end p-4">
+        <Button variant="ghost" onClick={() => setIsMobileMenuOpen(false)} className="text-white hover:text-blue-200">
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </Button>
+      </div>
+      <nav className="flex flex-col items-center gap-6 py-8">
+        {isAuthenticated && navLinks.map(({ to, icon: Icon, label }, index) => (
+          <Link 
+            key={index} 
+            to={to} 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 text-white hover:text-blue-200 transition-colors duration-300"
+          >
+            <Icon className="h-6 w-6" fill="currentColor" strokeWidth={1.5} />
+            <span className="text-lg font-semibold">{label}</span>
+          </Link>
+        ))}
+        {isAuthenticated && (
+          <Button
+            variant="ghost"
+            className="flex items-center gap-3 text-white hover:text-blue-200 text-lg font-semibold mt-4"
+            onClick={handleSignOut}
+          >
+            <LogOutIcon className="h-6 w-6" />
+            Sign Out
+          </Button>
+        )}
+        {!isAuthenticated && !isForDashboard && (
+          <>
+            <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)} className="text-white hover:text-blue-200 text-lg font-semibold">Sign In</Link>
+            <Link to="/auth?signup=true" onClick={() => setIsMobileMenuOpen(false)} className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition-all duration-300 text-lg font-semibold">Sign Up</Link>
+          </>
+        )}
+      </nav>
+    </div>
   );
 
   const renderAuthButtons = () => {
@@ -59,21 +94,21 @@ const Header = ({ isForDashboard = false }) => {
       return (
         <Button 
           variant="ghost" 
-          className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 flex items-center gap-2"
+          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 flex items-center gap-2 transition-all duration-300"
           onClick={handleSignOut}
         >
           <LogOutIcon className="h-4 w-4" />
-          Sign Out
+          <span className="font-semibold">Sign Out</span>
         </Button>
       );
     }
 
     return (
-      <div className="flex gap-4 ml-4">
-        <Button variant="ghost" className="text-gray-600 hover:text-gray-900 hover:bg-gray-100" asChild>
+      <div className="hidden md:flex gap-4">
+        <Button variant="ghost" className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 font-semibold transition-all duration-300" asChild>
           <Link to="/auth">Sign In</Link>
         </Button>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 py-2 font-semibold shadow-md transform hover:scale-105 transition-all duration-300" asChild>
           <Link to="/auth?signup=true">Sign Up</Link>
         </Button>
       </div>
@@ -81,15 +116,29 @@ const Header = ({ isForDashboard = false }) => {
   };
 
   return (
-    <header className="bg-white text-gray-800 flex justify-between items-center px-6 py-4 border-b border-gray-200 shadow-sm">
-      <div className="font-bold text-xl text-blue-600">
-        <Link to="/">SkillXion</Link>
+    <header className="bg-white text-gray-800 flex justify-between items-center px-6 py-4 border-b border-blue-200 shadow-lg sticky top-0 z-20">
+      <div className="font-extrabold text-2xl text-blue-600 tracking-tight">
+        <Link to="/" className="flex items-center gap-2">
+          <svg className="h-6 w-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zm0 7v11l10-5V7l-10 5z" />
+          </svg>
+          SkillXion
+        </Link>
       </div>
-      
-      <div className="flex items-center justify-end gap-8 ml-auto">
+
+      <div className="flex items-center gap-6">
         {renderNavLinks()}
         {!isForDashboard && renderAuthButtons()}
+        <Button 
+          variant="ghost" 
+          className="md:hidden text-blue-600 hover:text-blue-800" 
+          onClick={() => setIsMobileMenuOpen(true)}
+        >
+          <MenuIcon className="h-6 w-6" />
+        </Button>
       </div>
+
+      {renderMobileMenu()}
     </header>
   );
 };
