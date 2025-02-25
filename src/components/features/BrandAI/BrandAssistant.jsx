@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { generateIdeas } from './api/generateIdeas';
 import { generateBrandNames } from './api/generateBrandNames';
-import { generateBusinessPlan } from './api/generateBusinessPlan'; // New import
+import { generateBusinessPlan } from './api/generateBusinessPlan';
 import Header from '../../../pages/Header';
 import { supabase } from '../../../lib/supabase';
 import LogoGeneration from './LogoGeneration';
@@ -59,7 +59,7 @@ const ideasReducer = (state, action) => {
   }
 };
 
-// IdeaCard Component (unchanged from previous enhancement)
+// IdeaCard Component
 const IdeaCard = ({ idea, index, onSelect, variant = "default", isSelected, onSave }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -140,7 +140,7 @@ const IdeaCard = ({ idea, index, onSelect, variant = "default", isSelected, onSa
   );
 };
 
-// BrandNameCard Component (unchanged from previous enhancement)
+// BrandNameCard Component
 const BrandNameCard = ({ brandName, onSelect, isSelected }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [domainAvailable, setDomainAvailable] = useState(null);
@@ -317,7 +317,7 @@ const BusinessPlanGenerator = ({ selectedIdea, selectedBrandName, onBack }) => {
         <CardContent className="p-6">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-semibold text-xl text-gray-800">{selectedIdea.title} - {selectedBrandName.name}</h3>
+              <h3 className="font-semibold text-xl text-gray-800">{selectedIdea.title} - ${selectedBrandName.name}</h3>
               <p className="text-sm text-gray-600 mt-2">{selectedIdea.description}</p>
             </div>
             <Button variant="outline" onClick={onBack} className="shadow-sm">
@@ -403,17 +403,30 @@ const BrandAssistant = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw new Error(`Auth error: ${authError.message}`);
         if (!user) throw new Error('Please log in to continue');
-        const { data: profile } = await supabase.from('profiles').select('skills').eq('id', user.id).single();
+        console.log('User:', user);
+
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('skills')
+          .eq('id', user.id)
+          .single();
+        if (profileError) throw new Error(`Profile fetch failed: ${profileError.message}`);
+        console.log('Profile:', profile);
+
         const userSkills = profile?.skills || [];
         setSkills(userSkills);
+
         if (userSkills.length > 0) {
           const ideas = await generateWithRetry(generateIdeas, userSkills, '');
+          console.log('Generated Ideas:', ideas);
           dispatch({ type: 'SET_AUTO_IDEAS', payload: ideas.map(idea => ({ ...idea, saved: false })) });
         }
       } catch (err) {
-        setError('Failed to load data. Please try again.');
+        console.error('FetchData Error:', err);
+        setError(err.message);
       } finally {
         setIsLoading(false);
       }
@@ -665,7 +678,13 @@ const BrandAssistant = () => {
           </CardHeader>
           <CardContent className="p-6">
             <AnimatePresence mode="wait">
-              <motion.div key={currentPage} initial={{ opacity: 0, x: currentPage === 0 ? -20 : 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: currentPage === 0 ? 20 : -20 }} transition={{ duration: 0.3 }}>
+              <motion.div
+                key={currentPage}
+                initial={{ opacity: 0, x: currentPage === 0 ? -20 : 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: currentPage === 0 ? 20 : -20 }}
+                transition={{ duration: 0.3 }}
+              >
                 {isLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
