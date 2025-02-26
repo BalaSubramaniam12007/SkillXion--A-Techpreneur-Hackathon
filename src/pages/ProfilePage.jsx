@@ -418,7 +418,7 @@ const ProfilePage = () => {
                   <CardContent className="p-6">
                     <h2 className="text-xl font-semibold mb-4">Experience</h2>
                     <div className="space-y-6">
-                      {profile?.experience?.map((exp, index) => (
+                      {Array.isArray(profile?.experience) && profile.experience.map((exp, index) => (
                         <motion.div 
                           key={index} 
                           className="flex gap-4"
