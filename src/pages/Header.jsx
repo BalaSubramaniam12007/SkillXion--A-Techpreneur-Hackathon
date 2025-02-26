@@ -30,6 +30,7 @@ const Header = ({ isForDashboard = false }) => {
     { to: "/fund-finder", icon: WalletIcon, label: "Fund Finder" },
     { to: "/freelancer-hub", icon: UsersIcon, label: "Freelancer Hub" },
     { to: "/resume-assistant", icon: FileTextIcon, label: "Resume Assistant" },
+    { to: "/mock-interview", icon: BriefcaseIcon, label: "Mock Interview" },
     { to: "/profile", icon: UserIcon, label: "Profile" },
   ];
 
