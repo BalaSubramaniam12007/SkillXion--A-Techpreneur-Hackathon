@@ -25,6 +25,8 @@ const Header = ({ isForDashboard = false }) => {
   };
 
   const navLinks = [
+    { to: "/dashboard", icon: BuildingIcon, label: "Dashboard" },
+    { to: "/connections", icon: BuildingIcon, label: "Network" },
     { to: "/brand-assistant", icon: BuildingIcon, label: "Brand Assistant" },
     { to: "/job-assistant", icon: BriefcaseIcon, label: "Job Assistant" },
     { to: "/fund-finder", icon: WalletIcon, label: "Fund Finder" },
