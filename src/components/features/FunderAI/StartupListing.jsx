@@ -1,5 +1,4 @@
-// src/components/features/StartupListings.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,70 +9,41 @@ import {
   MessageSquare, Bookmark, TrendingUp, Briefcase, Send
 } from "lucide-react";
 import Header from '../../../pages/Header';
+import { supabase } from '../../../lib/supabase'; // Adjust this path to your Supabase config file
 
 const StartupListings = () => {
   const [currentStartupIndex, setCurrentStartupIndex] = useState(0);
   const [savedStartups, setSavedStartups] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [filterIndustry, setFilterIndustry] = useState('all');
-
-  const startups = [
-    {
-      id: 1,
-      name: "GreenTech Solutions",
-      industry: "Clean Energy",
-      fundingGoal: "$500,000",
-      fundingRaised: "$250,000",
-      teamSize: 8,
-      location: "San Francisco, CA",
-      pitch: "Revolutionary solar panel technology with 40% improved efficiency.",
-      founder: "Jane Doe",
-      rating: 4.8,
-      daysLeft: 45,
-      investors: 12,
-      stage: "Seed",
-      website: "greentechsol.com"
-    },
-    {
-      id: 2,
-      name: "HealthSync",
-      industry: "HealthTech",
-      fundingGoal: "$1,200,000",
-      fundingRaised: "$800,000",
-      teamSize: 15,
-      location: "Boston, MA",
-      pitch: "AI-powered patient monitoring system for hospitals.",
-      founder: "John Smith",
-      rating: 4.9,
-      daysLeft: 30,
-      investors: 18,
-      stage: "Series A",
-      website: "healthsync.ai"
-    },
-    {
-      id: 3,
-      name: "EduFuture",
-      industry: "EdTech",
-      fundingGoal: "$300,000",
-      fundingRaised: "$150,000",
-      teamSize: 5,
-      location: "London, UK",
-      pitch: "Interactive learning platform for K-12 students.",
-      founder: "Emma Wilson",
-      rating: 4.7,
-      daysLeft: 60,
-      investors: 8,
-      stage: "Pre-Seed",
-      website: "edufuture.co.uk"
-    }
-  ];
+  const [startups, setStartups] = useState([]);
 
   const industries = [
     { id: 'all', name: 'All Industries' },
-    { id: 'cleantech', name: 'Clean Energy' },
+    { id: 'agritech', name: 'AgriTech' },
+    { id: 'fintech', name: 'FinTech' },
     { id: 'healthtech', name: 'HealthTech' },
-    { id: 'edtech', name: 'EdTech' }
+    { id: 'mobility', name: 'Mobility' },
+    { id: 'edtech', name: 'EdTech' },
+    { id: 'ecommerce', name: 'E-commerce' }
   ];
+
+  useEffect(() => {
+    const fetchStartups = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('startups')
+          .select('*');
+        
+        if (error) throw error;
+        setStartups(data);
+      } catch (error) {
+        console.error('Error fetching startups:', error.message);
+      }
+    };
+
+    fetchStartups();
+  }, []);
 
   const filteredStartups = useMemo(() => {
     let result = startups;
@@ -88,7 +58,7 @@ const StartupListings = () => {
       );
     }
     return result;
-  }, [filterIndustry, searchQuery]);
+  }, [startups, filterIndustry, searchQuery]);
 
   const handleSaveStartup = (startupId) => {
     setSavedStartups(prev => {
@@ -99,12 +69,10 @@ const StartupListings = () => {
   };
 
   const handleContactFounder = (startupId) => {
-    // Implement messaging logic here
     console.log(`Contacting founder of startup ${startupId}`);
   };
 
   const handleFundStartup = (startupId) => {
-    // Implement funding logic here
     console.log(`Initiating funding for startup ${startupId}`);
   };
 
@@ -113,7 +81,6 @@ const StartupListings = () => {
       <Header isForDashboard={true} />
       
       <main className="w-full max-w-7xl mx-auto p-6 pt-24 space-y-12">
-        {/* Search and Filter Bar */}
         <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col sm:flex-row gap-4 items-center">
           <Input
             placeholder="Search startups..."
@@ -137,7 +104,6 @@ const StartupListings = () => {
           </div>
         </div>
 
-        {/* Startups Section */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
@@ -187,21 +153,21 @@ const StartupListings = () => {
                           <DollarSign className="w-4 h-4" />
                           <span className="text-xs font-medium">Funding</span>
                         </div>
-                        <p className="font-semibold text-sm">{startup.fundingRaised}/{startup.fundingGoal}</p>
+                        <p className="font-semibold text-sm">{startup.funding_raised}/{startup.funding_goal}</p>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-lg shadow-sm">
                         <div className="flex items-center gap-2 text-gray-600 mb-1">
                           <Clock className="w-4 h-4" />
                           <span className="text-xs font-medium">Time Left</span>
                         </div>
-                        <p className="font-semibold text-sm">{startup.daysLeft} days</p>
+                        <p className="font-semibold text-sm">{startup.days_left} days</p>
                       </div>
                       <div className="bg-gray-50 p-3 rounded-lg shadow-sm">
                         <div className="flex items-center gap-2 text-gray-600 mb-1">
                           <Users className="w-4 h-4" />
                           <span className="text-xs font-medium">Team</span>
                         </div>
-                        <p className="font-semibold text-sm">{startup.teamSize}</p>
+                        <p className="font-semibold text-sm">{startup.team_size}</p>
                       </div>
                     </div>
 
