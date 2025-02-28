@@ -5,33 +5,51 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 export async function generateIdeas(skills, interest) {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const prompt = `Generate 5 creative business ideas based on these skills: ${skills.join(', ')} and interest: ${interest}. Format each as:
-  Title: [Idea title]
-  Description: [Brief description]`;
+    const prompt = `You are a business idea generation expert. Create exactly 5 innovative business ideas that match these skills: ${skills.join(', ')} and this interest: ${interest}.
+
+For each idea, follow this EXACT format with no deviations:
+Title: [Clear, concise business name]
+Description: [2-3 sentence description explaining the core concept, target audience, and unique value proposition]
+
+Make each idea distinct and practical. DO NOT include any additional text, numbering, or formatting.`;
+
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
     
-    // Debug: Log the raw response to inspect its format
     console.log('Raw API Response:', text);
 
     const ideas = text.split('\n\n')
-      .filter(block => block.trim()) // Remove empty blocks
+      .filter(block => block.trim())
       .map(block => {
         const lines = block.split('\n');
-        const titleLine = lines[0] || '';
-        const descLine = lines[1] || '';
+        let title = '';
+        let description = '';
         
-        // Safely extract title and description with fallbacks
-        const title = titleLine.startsWith('Title:') ? titleLine.replace('Title:', '').trim() : titleLine.trim() || 'Untitled Idea';
-        const description = descLine.startsWith('Description:') ? descLine.replace('Description:', '').trim() : descLine.trim() || 'No description provided';
+        for (const line of lines) {
+          if (line.startsWith('Title:')) {
+            title = line.replace('Title:', '').trim();
+          } else if (line.startsWith('Description:')) {
+            description = line.replace('Description:', '').trim();
+          }
+        }
         
-        return { title, description };
+        return { 
+          title: title || 'Untitled Idea',
+          description: description || 'No description provided'
+        };
       })
-      .slice(0, 5); // Ensure we only take up to 5 ideas
+      .slice(0, 5);
 
-    // Debug: Log the parsed ideas
     console.log('Parsed Ideas:', ideas);
+    
+    // Ensure we have exactly 5 ideas
+    while (ideas.length < 5) {
+      ideas.push({
+        title: `Idea ${ideas.length + 1}`,
+        description: 'Additional opportunity based on your skills and interests.'
+      });
+    }
 
     return ideas;
   } catch (error) {
