@@ -9,7 +9,7 @@ const upload = multer({ dest: 'uploads/' });
 
 // Configure CORS to allow requests from http://localhost:5173
 app.use(cors({
-  origin: 'http://localhost:5176', // Match your frontend's origin
+  origin: 'http://localhost:5173', // Match your frontend's origin
   methods: ['GET', 'POST'],        // Specify allowed methods
   allowedHeaders: ['Content-Type'], // Specify allowed headers
 }));

@@ -25,7 +25,7 @@ def get_ai_response(resume_text, job_desc):
     prompt = (
         f"Resume text:\n{resume_text[:2000]}\n\n"
         f"Job description:\n{job_desc[:1000]}\n\n"
-        "Analyze the resume and job description. Calculate an ATS score (0-100) based on keyword "
+        "Analyze the resume and job description. Calculate an ATS score (70-100) based on keyword "
         "and content alignment. Identify key skills, experiences, or keywords present in the job "
         "description that are missing or underrepresented in the resume. Return a JSON object with: "
         "- 'ats_score': the calculated score (integer)"
