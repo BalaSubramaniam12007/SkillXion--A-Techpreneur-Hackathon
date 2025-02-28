@@ -23,9 +23,10 @@ import {
   Sort as SortIcon,
   PersonAdd
 } from '@mui/icons-material';
-import Header from './Header'; // Adjust the import path as needed
+import Header from './Header'; 
+import MessageModal from './MessageModel'; // Fixed typo
 
-// Sample data for Connections (10 items)
+// Sample data for Connections (10 realistic users)
 const sampleConnections = Array.from({ length: 10 }, (_, index) => ({
   id: `conn-${index + 1}`,
   connection_id: `user-${index + 1}`,
@@ -42,7 +43,7 @@ const sampleConnections = Array.from({ length: 10 }, (_, index) => ({
   },
 }));
 
-// Sample data for "People You May Know" (10 items)
+// Sample data for "People You May Know" (10 realistic users)
 const sampleSuggestions = Array.from({ length: 10 }, (_, index) => ({
   id: `sugg-${index + 1}`,
   user_id: `user-sugg-${index + 1}`,
@@ -62,11 +63,13 @@ const ConnectionsPage = () => {
   const [suggestions] = useState(sampleSuggestions);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState(null);
   
-  // Pagination states
+  // Pagination states (3 items per page)
   const [connPage, setConnPage] = useState(1);
   const [suggPage, setSuggPage] = useState(1);
-  const itemsPerPage = 3; // Show 3 items per page
+  const itemsPerPage = 3;
 
   const handleDisconnect = (connectionId) => {
     console.log(`Disconnected ${connectionId}`);
@@ -74,6 +77,16 @@ const ConnectionsPage = () => {
 
   const handleConnect = (suggestionId) => {
     console.log(`Connection request sent to ${suggestionId}`);
+  };
+
+  const handleOpenMessageModal = (recipient) => {
+    setSelectedRecipient(recipient);
+    setMessageModalOpen(true);
+  };
+
+  const handleCloseMessageModal = () => {
+    setMessageModalOpen(false);
+    setSelectedRecipient(null);
   };
 
   const filteredConnections = connections.filter(conn => 
@@ -111,19 +124,19 @@ const ConnectionsPage = () => {
           <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#0A66C2', mb: 2 }}>
             My Network
           </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
             <Chip 
               label={`${filteredConnections.length} Connections`} 
               sx={{ bgcolor: '#E9ECEF', fontWeight: 'medium' }}
             />
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
               <TextField
                 placeholder="Search your connections"
                 variant="outlined"
                 size="small"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                sx={{ bgcolor: 'white', borderRadius: 1 }}
+                sx={{ bgcolor: 'white', borderRadius: 1, minWidth: 200 }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -163,7 +176,7 @@ const ConnectionsPage = () => {
             paginatedConnections.map((conn) => (
               <Card 
                 key={conn.id} 
-                sx={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: 2, bgcolor: 'white' }}
+                sx={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: 2, bgcolor: 'white', transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.02)' } }}
               >
                 <Box sx={{ height: 60, bgcolor: '#E9ECEF' }} />
                 <CardContent sx={{ pt: 4, pb: 2, position: 'relative' }}>
@@ -191,7 +204,11 @@ const ConnectionsPage = () => {
                 </CardContent>
                 <Divider />
                 <CardActions sx={{ bgcolor: '#F7FAFC', justifyContent: 'space-between', p: 1 }}>
-                  <Button startIcon={<Message />} sx={{ color: '#0A66C2', textTransform: 'none' }}>
+                  <Button 
+                    startIcon={<Message />}
+                    sx={{ color: '#0A66C2', textTransform: 'none' }}
+                    onClick={() => handleOpenMessageModal(conn.profiles)}
+                  >
                     Message
                   </Button>
                   <Button
@@ -215,6 +232,7 @@ const ConnectionsPage = () => {
               page={connPage} 
               onChange={(e, page) => setConnPage(page)} 
               color="primary" 
+              size="large"
             />
           </Box>
         )}
@@ -226,7 +244,10 @@ const ConnectionsPage = () => {
           </Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: '1fr 1fr 1fr' }, gap: 4 }}>
             {paginatedSuggestions.map((sugg) => (
-              <Card key={sugg.id} sx={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: 2, bgcolor: 'white' }}>
+              <Card 
+                key={sugg.id} 
+                sx={{ boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: 2, bgcolor: 'white', transition: 'transform 0.2s', '&:hover': { transform: 'scale(1.02)' } }}
+              >
                 <Box sx={{ height: 60, bgcolor: '#E9ECEF' }} />
                 <CardContent sx={{ pt: 4, pb: 2, position: 'relative' }}>
                   <Avatar
@@ -273,10 +294,18 @@ const ConnectionsPage = () => {
                 page={suggPage} 
                 onChange={(e, page) => setSuggPage(page)} 
                 color="primary" 
+                size="large"
               />
             </Box>
           )}
         </Box>
+
+        {/* Message Modal */}
+        <MessageModal 
+          open={messageModalOpen} 
+          onClose={handleCloseMessageModal} 
+          recipient={selectedRecipient} 
+        />
       </Container>
     </>
   );
