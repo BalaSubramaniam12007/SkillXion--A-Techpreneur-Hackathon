@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowRight, ArrowLeft, Clock, DollarSign, Users, MapPin, Star, 
   Briefcase, Link as LinkIcon, MessageSquare, Share2, Bookmark,
-  TrendingUp, Shield, Search, Filter, SortAsc, SortDesc
+  TrendingUp, Shield, Search, Filter, SortAsc, SortDesc, List, Plus
 } from "lucide-react";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@radix-ui/react-tooltip';
 import Header from '../../../pages/Header';
@@ -15,7 +15,7 @@ import { supabase } from '@/lib/supabase';
 
 const ProjectListings = () => {
   const [projectPage, setProjectPage] = useState(1);
-  const [freelancerPage, setFreelancerPage] = useState(1);
+  const [freelancerPage, setFreelancerPage]  = useState(1);
   const [activeTab, setActiveTab] = useState('all');
   const [savedProjects, setSavedProjects] = useState(new Set());
   const [savedFreelancers, setSavedFreelancers] = useState(new Set());
@@ -28,6 +28,7 @@ const ProjectListings = () => {
   const [freelancers, setFreelancers] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingFreelancers, setLoadingFreelancers] = useState(true);
+  const [viewMode, setViewMode] = useState('all');
   const PROJECTS_PER_PAGE = 4;
   const FREELANCERS_PER_PAGE = 9;
 
@@ -79,6 +80,9 @@ const ProjectListings = () => {
 
   const filteredProjects = useMemo(() => {
     let result = projects;
+    if (viewMode === 'saved') {
+      result = result.filter(p => savedProjects.has(p.id));
+    }
     if (activeTab !== 'all') {
       result = result.filter(p => p.category === categories.find(c => c.id === activeTab).name);
     }
@@ -95,7 +99,7 @@ const ProjectListings = () => {
       result.sort((a, b) => b.views - a.views);
     }
     return result;
-  }, [projects, activeTab, searchQuery, sortOrder]);
+  }, [projects, activeTab, searchQuery, sortOrder, viewMode, savedProjects]);
 
   const filteredFreelancers = useMemo(() => {
     let result = freelancers;
@@ -121,6 +125,8 @@ const ProjectListings = () => {
     (projectPage - 1) * PROJECTS_PER_PAGE,
     projectPage * PROJECTS_PER_PAGE
   );
+
+
 
   const paginatedFreelancers = filteredFreelancers.slice(
     (freelancerPage - 1) * FREELANCERS_PER_PAGE,
@@ -159,6 +165,17 @@ const ProjectListings = () => {
     setIsContacting(freelancerId);
     await new Promise(resolve => setTimeout(resolve, 1000));
     setIsContacting(null);
+  };
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    setProjectPage(1);
+  };
+
+  const handlePostProject = () => {
+    // Placeholder for posting a project logic
+    console.log("Post a Project clicked - Add your navigation or modal logic here");
+    // Example: Navigate to a project posting page or open a modal
   };
 
   const buttonVariants = {
@@ -300,6 +317,43 @@ const ProjectListings = () => {
         <Header isForDashboard={true} />
         
         <main className="w-full max-w-7xl mx-auto p-4 sm:p-6 pt-20 sm:pt-24 space-y-12">
+          <div className="flex justify-start gap-4">
+            <motion.div variants={buttonVariants} initial="rest" whileHover="hover" whileTap="pressed">
+              <Button
+                variant={viewMode === 'all' ? "default" : "outline"}
+                onClick={() => handleViewModeChange('all')}
+                className={`rounded-lg shadow-sm transition-all duration-200 ${
+                  viewMode === 'all' ? "bg-blue-600 text-white hover:bg-blue-700" : "hover:bg-gray-100"
+                }`}
+              >
+                <List className="w-4 h-4 mr-2" />
+                All Projects
+              </Button>
+            </motion.div>
+            <motion.div variants={buttonVariants} initial="rest" whileHover="hover" whileTap="pressed">
+              <Button
+                variant={viewMode === 'saved' ? "default" : "outline"}
+                onClick={() => handleViewModeChange('saved')}
+                className={`rounded-lg shadow-sm transition-all duration-200 ${
+                  viewMode === 'saved' ? "bg-blue-600 text-white hover:bg-blue-700" : "hover:bg-gray-100"
+                }`}
+              >
+                <Bookmark className="w-4 h-4 mr-2" />
+                Saved Projects
+              </Button>
+            </motion.div>
+            <motion.div variants={buttonVariants} initial="rest" whileHover="hover" whileTap="pressed">
+              <Button
+                variant="default"
+                onClick={handlePostProject}
+                className="rounded-lg shadow-sm bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Post a Project
+              </Button>
+            </motion.div>
+          </div>
+
           <div className="bg-white rounded-xl shadow-md p-4 flex flex-col sm:flex-row gap-4 items-center">
             <div className="flex-1 w-full sm:w-auto">
               <Input
@@ -348,7 +402,7 @@ const ProjectListings = () => {
             <div className="flex flex-col space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-2">
-                  Project Listings
+                  {viewMode === 'saved' ? 'Saved Projects' : 'Project Listings'}
                   <Badge className="bg-blue-100 text-blue-600">{filteredProjects.length} Projects</Badge>
                 </h2>
               </div>
@@ -564,7 +618,7 @@ const ProjectListings = () => {
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
                   {paginatedFreelancers.length > 0 ? (
-                    paginatedFreelancers.map((freelancer) => (
+                    paginatedFreelancers.map((freelancer, index) => (
                       <motion.div
                         key={freelancer.id}
                         whileHover={{ scale: 1.02 }}
@@ -576,7 +630,7 @@ const ProjectListings = () => {
                             <div className="flex items-start gap-4 mb-4">
                               <div className="relative">
                                 <img
-                                  src={freelancer.image}
+                                  src={ `https://i.pravatar.cc/150?img=${index + 1}`}
                                   alt={freelancer.name}
                                   className="w-16 h-16 rounded-full object-cover border-2 border-gray-100 shadow-sm transition-transform duration-200 hover:scale-105"
                                 />
