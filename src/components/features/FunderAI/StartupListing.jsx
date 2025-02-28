@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,17 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   DollarSign, Users, Clock, MapPin, Star, Search, Filter, 
-  MessageSquare, Bookmark, TrendingUp, Briefcase, Send
+  BarChart2, Bookmark, TrendingUp, Briefcase, Send, List, Plus
 } from "lucide-react";
 import Header from '../../../pages/Header';
-import { supabase } from '../../../lib/supabase'; // Adjust this path to your Supabase config file
+import { supabase } from '../../../lib/supabase';
 
 const StartupListings = () => {
+  const navigate = useNavigate();
   const [currentStartupIndex, setCurrentStartupIndex] = useState(0);
   const [savedStartups, setSavedStartups] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [filterIndustry, setFilterIndustry] = useState('all');
   const [startups, setStartups] = useState([]);
+  const [startupViewMode, setStartupViewMode] = useState('all'); // New state for view mode
 
   const industries = [
     { id: 'all', name: 'All Industries' },
@@ -47,6 +50,9 @@ const StartupListings = () => {
 
   const filteredStartups = useMemo(() => {
     let result = startups;
+    if (startupViewMode === 'saved') {
+      result = result.filter(s => savedStartups.has(s.id));
+    }
     if (filterIndustry !== 'all') {
       result = result.filter(s => s.industry === industries.find(i => i.id === filterIndustry).name);
     }
@@ -58,7 +64,7 @@ const StartupListings = () => {
       );
     }
     return result;
-  }, [startups, filterIndustry, searchQuery]);
+  }, [startups, filterIndustry, searchQuery, startupViewMode, savedStartups]);
 
   const handleSaveStartup = (startupId) => {
     setSavedStartups(prev => {
@@ -68,12 +74,29 @@ const StartupListings = () => {
     });
   };
 
-  const handleContactFounder = (startupId) => {
-    console.log(`Contacting founder of startup ${startupId}`);
+  const handleAnalyzeStartup = (startupId) => {
+    navigate(`/fund-finder/${startupId}`);
   };
 
   const handleFundStartup = (startupId) => {
     console.log(`Initiating funding for startup ${startupId}`);
+  };
+
+  const handleStartupViewModeChange = (mode) => {
+    setStartupViewMode(mode);
+    setCurrentStartupIndex(0); // Reset index when changing view mode
+  };
+
+  const handlePostStartup = () => {
+    // Placeholder for posting a startup logic
+    console.log("Post a Startup clicked - Add your navigation or modal logic here");
+    navigate('/post-startup'); // Navigate to a hypothetical post startup page
+  };
+
+  const buttonVariants = {
+    rest: { scale: 1 },
+    hover: { scale: 1.05 },
+    pressed: { scale: 0.95 }
   };
 
   return (
@@ -81,6 +104,43 @@ const StartupListings = () => {
       <Header isForDashboard={true} />
       
       <main className="w-full max-w-7xl mx-auto p-6 pt-24 space-y-12">
+        <div className="flex justify-start gap-4">
+          <motion.div variants={buttonVariants} initial="rest" whileHover="hover" whileTap="pressed">
+            <Button
+              variant={startupViewMode === 'all' ? "default" : "outline"}
+              onClick={() => handleStartupViewModeChange('all')}
+              className={`rounded-lg shadow-sm transition-all duration-200 ${
+                startupViewMode === 'all' ? "bg-blue-600 text-white hover:bg-blue-700" : "hover:bg-gray-100"
+              }`}
+            >
+              <List className="w-4 h-4 mr-2" />
+              All Startups
+            </Button>
+          </motion.div>
+          <motion.div variants={buttonVariants} initial="rest" whileHover="hover" whileTap="pressed">
+            <Button
+              variant={startupViewMode === 'saved' ? "default" : "outline"}
+              onClick={() => handleStartupViewModeChange('saved')}
+              className={`rounded-lg shadow-sm transition-all duration-200 ${
+                startupViewMode === 'saved' ? "bg-blue-600 text-white hover:bg-blue-700" : "hover:bg-gray-100"
+              }`}
+            >
+              <Bookmark className="w-4 h-4 mr-2" />
+              Saved Startups
+            </Button>
+          </motion.div>
+          <motion.div variants={buttonVariants} initial="rest" whileHover="hover" whileTap="pressed">
+            <Button
+              variant="default"
+              onClick={handlePostStartup}
+              className="rounded-lg shadow-sm bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Post a Startup
+            </Button>
+          </motion.div>
+        </div>
+
         <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col sm:flex-row gap-4 items-center">
           <Input
             placeholder="Search startups..."
@@ -107,7 +167,7 @@ const StartupListings = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-              Startup Opportunities
+              {startupViewMode === 'saved' ? 'Saved Startups' : 'Startup Opportunities'}
               <Badge className="bg-blue-100 text-blue-600">{filteredStartups.length} Active</Badge>
             </h2>
           </div>
@@ -195,10 +255,10 @@ const StartupListings = () => {
                     <div className="flex gap-3 mt-6">
                       <Button 
                         className="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-                        onClick={() => handleContactFounder(startup.id)}
+                        onClick={() => handleAnalyzeStartup(startup.id)}
                       >
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Message
+                        <BarChart2 className="w-4 h-4 mr-2" />
+                        Analyze
                       </Button>
                       <Button 
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white shadow-sm"
