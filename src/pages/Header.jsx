@@ -43,7 +43,7 @@ const Header = ({ isForDashboard = false }) => {
           <svg className="h-6 w-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2L2 7l10 5 10-5-10-5zm0 7v11l10-5V7l-10 5z" />
           </svg>
-          SkillXion
+          NexusFlow
         </Link>
       </div>
 
