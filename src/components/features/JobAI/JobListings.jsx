@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +9,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Briefcase, DollarSign, MapPin, Clock, Star, Search, Filter, 
   Bookmark, Send, Building, Calendar, GraduationCap, ChevronLeft, 
-  ChevronRight, Grid, List, ChevronDown, ChevronUp
+  ChevronRight, Grid, List, ChevronDown, ChevronUp, Plus
 } from "lucide-react";
 import Header from '../../../pages/Header';
 import { supabase } from '@/lib/supabase';
 
 const JobListings = () => {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [savedJobs, setSavedJobs] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,6 +28,7 @@ const JobListings = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userProfiles, setUserProfiles] = useState({});
+  const [jobViewMode, setJobViewMode] = useState('all'); // New state for job view mode
   const jobsPerPage = 6;
 
   const industries = [
@@ -123,23 +126,28 @@ const JobListings = () => {
     const userSkills = userProfiles.skills.map(s => s.toLowerCase());
     const userInterests = userProfiles.interests?.map(s => s.toLowerCase()) || [];
     const jobSkills = (job.skills || []).map(s => s.toLowerCase());
-
+  
     const skillMatches = jobSkills.filter(skill => userSkills.includes(skill)).length;
     score += (skillMatches / Math.max(jobSkills.length, 1)) * 40;
-
+  
     const interestMatches = jobSkills.filter(skill => userInterests.includes(skill)).length;
     score += (interestMatches / Math.max(jobSkills.length, 1)) * 30;
-
-    if (userProfiles.experience && job.experience) {
+  
+    if (userProfiles.experience && job.experience && 
+        typeof userProfiles.experience === 'string' && 
+        typeof job.experience === 'string') {
       const expMatch = userProfiles.experience.toLowerCase() === job.experience.toLowerCase() ? 1 : 0.5;
       score += expMatch * 30;
     }
-
+  
     return Math.min(Math.round(score), 100);
   };
 
   const filteredJobs = useMemo(() => {
     let result = [...jobs];
+    if (jobViewMode === 'saved') {
+      result = result.filter(job => savedJobs.has(job.id));
+    }
     if (filterIndustry !== 'all') {
       result = result.filter(j => j.industry === filterIndustry);
     }
@@ -162,7 +170,7 @@ const JobListings = () => {
     });
 
     return result;
-  }, [jobs, filterIndustry, filterType, filterLocation, sortBy]);
+  }, [jobs, filterIndustry, filterType, filterLocation, sortBy, jobViewMode, savedJobs]);
 
   const paginatedJobs = useMemo(() => {
     const startIndex = (currentPage - 1) * jobsPerPage;
@@ -213,9 +221,26 @@ const JobListings = () => {
     }
   };
 
+  const handleJobViewModeChange = (mode) => {
+    setJobViewMode(mode);
+    setCurrentPage(1); // Reset pagination when changing view mode
+  };
+
+  const handlePostJob = () => {
+    // Placeholder for posting a job logic
+    console.log("Post a Job clicked - Add your navigation or modal logic here");
+    // Example: Navigate to a job posting page
+    navigate('/post-job');
+  };
+
   const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
 
-  // Skeleton Component
+  const buttonVariants = {
+    rest: { scale: 1 },
+    hover: { scale: 1.05 },
+    pressed: { scale: 0.95 }
+  };
+
   const SkeletonCard = () => (
     <Card className={`transform border border-gray-100 bg-white ${viewMode === 'list' ? 'flex flex-col sm:flex-row gap-4 p-4' : ''}`}>
       <CardContent className={viewMode === 'grid' ? 'p-6' : 'p-0 flex-1'}>
@@ -279,6 +304,43 @@ const JobListings = () => {
       <Header isForDashboard={true} />
       
       <main className="w-full max-w-7xl mx-auto p-4 sm:p-6 pt-20 sm:pt-24 space-y-8">
+        <div className="flex justify-start gap-4">
+          <motion.div variants={buttonVariants} initial="rest" whileHover="hover" whileTap="pressed">
+            <Button
+              variant={jobViewMode === 'all' ? "default" : "outline"}
+              onClick={() => handleJobViewModeChange('all')}
+              className={`rounded-lg shadow-sm transition-all duration-200 ${
+                jobViewMode === 'all' ? "bg-blue-600 text-white hover:bg-blue-700" : "hover:bg-gray-100"
+              }`}
+            >
+              <List className="w-4 h-4 mr-2" />
+              All Jobs
+            </Button>
+          </motion.div>
+          <motion.div variants={buttonVariants} initial="rest" whileHover="hover" whileTap="pressed">
+            <Button
+              variant={jobViewMode === 'saved' ? "default" : "outline"}
+              onClick={() => handleJobViewModeChange('saved')}
+              className={`rounded-lg shadow-sm transition-all duration-200 ${
+                jobViewMode === 'saved' ? "bg-blue-600 text-white hover:bg-blue-700" : "hover:bg-gray-100"
+              }`}
+            >
+              <Bookmark className="w-4 h-4 mr-2" />
+              Saved Jobs
+            </Button>
+          </motion.div>
+          <motion.div variants={buttonVariants} initial="rest" whileHover="hover" whileTap="pressed">
+            <Button
+              variant="default"
+              onClick={handlePostJob}
+              className="rounded-lg shadow-sm bg-green-600 text-white hover:bg-green-700 transition-all duration-200"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Post a Job
+            </Button>
+          </motion.div>
+        </div>
+
         <div className="bg-white rounded-lg shadow-sm p-4 space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
             <Input
@@ -365,7 +427,7 @@ const JobListings = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-2">
-              Job & Internship Opportunities
+              {jobViewMode === 'saved' ? 'Saved Jobs' : 'Job & Internship Opportunities'}
               <Badge className="bg-blue-100 text-blue-600">{filteredJobs.length} Active</Badge>
             </h2>
           </div>
@@ -492,13 +554,20 @@ const JobListings = () => {
                         )}
                       </div>
 
-                      <div className={viewMode === 'grid' ? 'flex gap-3 mt-6' : 'mt-4 sm:mt-0 sm:ml-auto'}>
+                      <div className={viewMode === 'grid' ? 'flex gap-3 mt-6' : 'mt-4 sm:mt-0 sm:ml-auto flex gap-3'}>
                         <Button 
                           className="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
                           onClick={() => handleApplyJob(job.id)}
                         >
                           <Send className="w-4 h-4 mr-2" />
                           Apply Now
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          className="flex-1 shadow-sm"
+                          onClick={() => navigate(`/job-assistant/${job.id}`)}
+                        >
+                          Details
                         </Button>
                       </div>
                     </CardContent>
