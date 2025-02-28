@@ -276,19 +276,20 @@ const BrandNameGeneration = ({ selectedIdea, onBack, onNext }) => {
 const BusinessPlanGenerator = ({ selectedIdea, selectedBrandName, onBack }) => {
   const [targetMarket, setTargetMarket] = useState('');
   const [fundingGoal, setFundingGoal] = useState('');
+  const [businessModel, setBusinessModel] = useState('Product-Based'); // New state for business model
   const [businessPlan, setBusinessPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleGeneratePlan = async () => {
-    if (!targetMarket || !fundingGoal) return;
+    if (!targetMarket || !fundingGoal || !businessModel) return;
     setIsLoading(true);
     setError('');
     try {
-      const plan = await generateWithRetry(generateBusinessPlan, selectedIdea, selectedBrandName, targetMarket, fundingGoal);
+      const plan = await generateWithRetry(generateBusinessPlan, selectedIdea, selectedBrandName, targetMarket, fundingGoal, businessModel);
       setBusinessPlan(plan);
     } catch (err) {
-      setError('Failed to generate business plan with Gemini. Please try again.');
+      setError('Failed to generate business plan. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -299,8 +300,10 @@ const BusinessPlanGenerator = ({ selectedIdea, selectedBrandName, onBack }) => {
       Business Plan for ${selectedBrandName.name}
       Executive Summary: ${businessPlan.summary}
       Target Market: ${businessPlan.targetMarket}
-      Funding Goal: ${businessPlan.fundingGoal}
-      Next Steps: ${businessPlan.nextSteps}
+      Revenue Model: ${businessPlan.revenueModel}
+      Funding Allocation: ${businessPlan.fundingGoal}
+      Next Steps:\n${businessPlan.nextSteps.map(step => `- ${step}`).join('\n')}
+      Resources:\n${businessPlan.resources.map(res => `- ${res}`).join('\n')}
     `;
     const blob = new Blob([planText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -344,9 +347,18 @@ const BusinessPlanGenerator = ({ selectedIdea, selectedBrandName, onBack }) => {
               onChange={(e) => setFundingGoal(e.target.value)} 
               className="shadow-sm" 
             />
+            <select 
+              value={businessModel} 
+              onChange={(e) => setBusinessModel(e.target.value)} 
+              className="w-full p-2 border rounded shadow-sm"
+            >
+              <option value="Product-Based">Product-Based</option>
+              <option value="Service-Based">Service-Based</option>
+              <option value="Subscription">Subscription</option>
+            </select>
             <Button 
               onClick={handleGeneratePlan} 
-              disabled={isLoading || !targetMarket || !fundingGoal} 
+              disabled={isLoading || !targetMarket || !fundingGoal || !businessModel} 
               className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm w-full"
             >
               {isLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
@@ -359,7 +371,7 @@ const BusinessPlanGenerator = ({ selectedIdea, selectedBrandName, onBack }) => {
       {businessPlan && (
         <Card className="bg-white border-blue-100 shadow-md">
           <CardHeader>
-            <CardTitle className="text-lg text-gray-800">Your Superhero Business Plan</CardTitle>
+            <CardTitle className="text-lg text-gray-800">Your Business Plan</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -371,12 +383,28 @@ const BusinessPlanGenerator = ({ selectedIdea, selectedBrandName, onBack }) => {
               <p className="text-sm text-gray-600">{businessPlan.targetMarket}</p>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-800">Funding Goal</h4>
+              <h4 className="font-semibold text-gray-800">Revenue Model</h4>
+              <p className="text-sm text-gray-600">{businessPlan.revenueModel}</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-800">Funding Allocation</h4>
               <p className="text-sm text-gray-600">{businessPlan.fundingGoal}</p>
             </div>
             <div>
               <h4 className="font-semibold text-gray-800">Next Steps</h4>
-              <p className="text-sm text-gray-600">{businessPlan.nextSteps}</p>
+              <ul className="text-sm text-gray-600 list-disc pl-5">
+                {businessPlan.nextSteps.map((step, index) => (
+                  <li key={index}>{step}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-800">Resources</h4>
+              <ul className="text-sm text-gray-600 list-disc pl-5">
+                {businessPlan.resources.map((resource, index) => (
+                  <li key={index}>{resource}</li>
+                ))}
+              </ul>
             </div>
             <Button onClick={handleDownload} className="bg-green-600 hover:bg-green-700 w-full">
               <CheckCircle className="h-4 w-4 mr-2" /> Download Plan
@@ -406,7 +434,6 @@ const BrandAssistant = () => {
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError) throw new Error(`Auth error: ${authError.message}`);
         if (!user) throw new Error('Please log in to continue');
-        console.log('User:', user);
 
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -414,14 +441,12 @@ const BrandAssistant = () => {
           .eq('id', user.id)
           .single();
         if (profileError) throw new Error(`Profile fetch failed: ${profileError.message}`);
-        console.log('Profile:', profile);
 
         const userSkills = profile?.skills || [];
         setSkills(userSkills);
 
         if (userSkills.length > 0) {
           const ideas = await generateWithRetry(generateIdeas, userSkills, '');
-          console.log('Generated Ideas:', ideas);
           dispatch({ type: 'SET_AUTO_IDEAS', payload: ideas.map(idea => ({ ...idea, saved: false })) });
         }
       } catch (err) {
@@ -474,7 +499,7 @@ const BrandAssistant = () => {
         payload: ideas.map(idea => ({ ...idea, saved: false }))
       });
     } catch (err) {
-      setError(err.message?.includes('503') ? 'Gemini service is busy. Please try again later.' : 'Failed to generate ideas');
+      setError('Failed to generate ideas. Please try again.');
     } finally {
       setIsLoading(false);
     }
